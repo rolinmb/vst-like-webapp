@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Audio Spectrogram</title>
+    <title>Audio Analyzer & Effects</title>
 
     <link rel="stylesheet" href="./index.css">
     <script src="./app.js" defer></script>
@@ -15,11 +15,13 @@
 
     <main class="container">
 
-        <h1>Audio Spectrogram</h1>
+        <h1>Audio Analyzer</h1>
 
         <!-- AUDIO UPLOAD -->
 
-        <div class="upload-container">
+        <section class="panel">
+
+            <h2>Audio Upload</h2>
 
             <label for="audio-upload" class="upload-label">
                 Choose an audio file
@@ -31,21 +33,104 @@
                 Supported formats: MP3 and WAV
             </p>
 
-        </div>
+        </section>
 
         <!-- AUDIO PLAYER -->
 
-        <div class="audio-container" id="audio-container" hidden>
+        <section class="panel audio-container" id="audio-container" hidden>
 
             <h2 id="audio-filename"></h2>
 
             <audio id="audio-player" controls></audio>
 
-        </div>
+        </section>
+
+        <!-- AUDIO EFFECTS -->
+
+        <section class="panel effects-container">
+
+            <h2>Audio Effects</h2>
+
+            <!-- INPUT GAIN -->
+
+            <div class="control-group">
+
+                <div class="control-header">
+                    <label for="gain-control">Input Gain</label>
+                    <span id="gain-value">1.00x</span>
+                </div>
+
+                <input type="range" id="gain-control" min="0" max="3" step="0.01" value="1">
+
+            </div>
+
+            <!-- DISTORTION TYPE -->
+
+            <div class="control-group">
+
+                <label for="distortion-type">
+                    Distortion Type
+                </label>
+
+                <select id="distortion-type">
+
+                    <option value="none">None</option>
+                    <option value="hard">Hard Clipping</option>
+                    <option value="soft">Soft Clipping</option>
+                    <option value="tanh">Hyperbolic Tangent</option>
+                    <option value="atan">Arctangent</option>
+                    <option value="cubic">Cubic Distortion</option>
+                    <option value="sine">Sine Wave Folding</option>
+                    <option value="fuzz">Fuzz</option>
+                    <option value="asymmetric">Asymmetric Distortion</option>
+
+                </select>
+
+            </div>
+
+            <!-- DISTORTION DRIVE -->
+
+            <div class="control-group">
+
+                <div class="control-header">
+                    <label for="drive-control">Distortion Drive</label>
+                    <span id="drive-value">1.0x</span>
+                </div>
+
+                <input type="range" id="drive-control" min="1" max="50" step="0.1" value="1">
+
+            </div>
+
+            <!-- WET / DRY -->
+
+            <div class="control-group">
+
+                <div class="control-header">
+                    <label for="mix-control">Wet / Dry Mix</label>
+                    <span id="mix-value">100%</span>
+                </div>
+
+                <input type="range" id="mix-control" min="0" max="100" step="1" value="100">
+
+            </div>
+
+            <!-- BYPASS -->
+
+            <div class="bypass-container">
+
+                <label for="bypass-control">
+                    Bypass Distortion
+                </label>
+
+                <input type="checkbox" id="bypass-control">
+
+            </div>
+
+        </section>
 
         <!-- SPECTROGRAM -->
 
-        <section class="spectrogram-container">
+        <section class="panel spectrogram-container">
 
             <h2>Spectrogram</h2>
 
@@ -69,8 +154,6 @@
             </div>
 
         </section>
-
-        <!-- STATUS -->
 
         <p id="app-status"></p>
 

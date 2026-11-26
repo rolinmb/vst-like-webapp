@@ -30,14 +30,14 @@ h1 {
 
 h2 {
     font-size: 18px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-.upload-container {
-    padding: 30px;
-    border: 2px dashed #666666;
+.panel {
+    padding: 25px;
+    margin-bottom: 25px;
+    background: #2c2c2c;
     border-radius: 8px;
-    text-align: center;
 }
 
 .upload-label {
@@ -58,13 +58,9 @@ h2 {
 }
 
 .file-info {
-    margin-top: 20px;
+    margin-top: 15px;
     color: #aaaaaa;
     font-size: 14px;
-}
-
-.audio-container {
-    margin-top: 30px;
 }
 
 .audio-container h2 {
@@ -75,8 +71,64 @@ audio {
     width: 100%;
 }
 
-.spectrogram-container {
-    margin-top: 35px;
+.control-group {
+    margin-bottom: 25px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.control-header label {
+    margin-bottom: 0;
+}
+
+.control-header span {
+    color: #63a4ff;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+    display: block;
+    width: 100%;
+    accent-color: #3478f6;
+    cursor: pointer;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    background: #1c1c1c;
+    color: white;
+    border: 1px solid #555555;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.bypass-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #444444;
+    font-size: 14px;
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3478f6;
+    cursor: pointer;
 }
 
 .spectrogram-wrapper {
@@ -129,6 +181,9 @@ audio {
         padding: 10px;
     }
     .container {
+        padding: 15px;
+    }
+    .panel {
         padding: 18px;
     }
     .frequency-labels {

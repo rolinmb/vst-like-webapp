@@ -20,6 +20,24 @@ async function init() {
 
     const ctx = canvas.getContext("2d");
 
+    // EFFECT CONTROLS
+
+    const gainControl = document.getElementById("gain-control");
+
+    const gainValue = document.getElementById("gain-value");
+
+    const distortionType = document.getElementById("distortion-type");
+
+    const driveControl = document.getElementById("drive-control");
+
+    const driveValue = document.getElementById("drive-value");
+
+    const mixControl = document.getElementById("mix-control");
+
+    const mixValue = document.getElementById("mix-value");
+
+    const bypassControl = document.getElementById("bypass-control");
+
 
     // --------------------------------------------------
     // AUDIO VARIABLES
@@ -27,13 +45,25 @@ async function init() {
 
     let audioContext = null;
 
+    let source = null;
+
     let analyser = null;
 
-    let source = null;
+    let inputGain = null;
+
+    let waveshaper = null;
+
+    let dryGain = null;
+
+    let wetGain = null;
+
+    let masterGain = null;
 
     let frequencyData = null;
 
     let animationFrame = null;
+
+    let currentObjectURL = null;
 
 
     // --------------------------------------------------
@@ -52,7 +82,7 @@ async function init() {
 
 
     // --------------------------------------------------
-    // CANVAS INITIALIZATION
+    // CANVAS
     // --------------------------------------------------
 
     function resizeCanvas() {
@@ -74,18 +104,258 @@ async function init() {
 
         ctx.fillStyle = "#080808";
 
-        ctx.fillRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    }
+
+
+    // --------------------------------------------------
+    // DISTORTION ALGORITHMS
+    // --------------------------------------------------
+
+    function generateDistortionCurve(type, amount) {
+
+        const samples = 4096;
+
+        const curve = new Float32Array(samples);
+
+        const drive = amount;
+
+        for (let i = 0; i < samples; i++) {
+
+            // Input range: -1 to 1
+
+            const x = (i * 2) / samples - 1;
+
+            const input = x * drive;
+
+            let output = input;
+
+            switch (type) {
+
+                // --------------------------------------
+                // HARD CLIPPING
+                // --------------------------------------
+
+                case "hard":
+
+                    output = Math.max(-1,
+                        Math.min(1, input)
+                    );
+
+                    break;
+
+
+                    // --------------------------------------
+                    // SOFT CLIPPING
+                    // --------------------------------------
+
+                case "soft":
+
+                    output = input / (1 + Math.abs(input));
+
+                    break;
+
+
+                    // --------------------------------------
+                    // HYPERBOLIC TANGENT
+                    // --------------------------------------
+
+                case "tanh":
+
+                    output = Math.tanh(input);
+
+                    break;
+
+
+                    // --------------------------------------
+                    // ARCTANGENT
+                    // --------------------------------------
+
+                case "atan":
+
+                    output = (2 / Math.PI) * Math.atan(input);
+
+                    break;
+
+
+                    // --------------------------------------
+                    // CUBIC DISTORTION
+                    // --------------------------------------
+
+                case "cubic":
+
+                    output = input - Math.pow(input, 3) / 3;
+
+                    output = Math.max(-1,
+                        Math.min(1, output)
+                    );
+
+                    break;
+
+
+                    // --------------------------------------
+                    // SINE WAVE FOLDING
+                    // --------------------------------------
+
+                case "sine":
+
+                    output = Math.sin(input * Math.PI / 2);
+
+                    break;
+
+
+                    // --------------------------------------
+                    // FUZZ
+                    // --------------------------------------
+
+                case "fuzz":
+
+                    output = Math.tanh(input * 2);
+
+                    // Additional saturation
+
+                    output = Math.sign(output) *
+                        Math.pow(Math.abs(output), 0.5);
+
+                    break;
+
+
+                    // --------------------------------------
+                    // ASYMMETRIC DISTORTION
+                    // --------------------------------------
+
+                case "asymmetric":
+                    {
+
+                        const bias = 0.4;
+
+                        const positive = Math.tanh(
+                            input + bias
+                        );
+
+                        const negative = Math.tanh(bias);
+
+                        output = (positive - negative) /
+                        (1 - negative);
+
+                        break;
+
+                    }
+
+
+                    // --------------------------------------
+                    // NO DISTORTION
+                    // --------------------------------------
+
+                case "none":
+
+                    output = x;
+
+                    break;
+
+            }
+
+            curve[i] = Math.max(-1,
+                Math.min(1, output)
+            );
+
+        }
+
+        return curve;
+
+    }
+
+
+    // --------------------------------------------------
+    // UPDATE DISTORTION
+    // --------------------------------------------------
+
+    function updateDistortion() {
+
+        if (!waveshaper) {
+            return;
+        }
+
+        const type = distortionType.value;
+
+        const drive = Number(driveControl.value);
+
+        waveshaper.curve = generateDistortionCurve(
+            type,
+            drive
+        );
+
+        waveshaper.oversample = "4x";
+
+        updateMix();
+
+    }
+
+
+    // --------------------------------------------------
+    // UPDATE GAIN
+    // --------------------------------------------------
+
+    function updateGain() {
+
+        const value = Number(gainControl.value);
+
+        gainValue.textContent = value.toFixed(2) + "x";
+
+        if (inputGain) {
+
+            inputGain.gain.setTargetAtTime(
+                value,
+                audioContext.currentTime,
+                0.01
+            );
+
+        }
+
+    }
+
+
+    // --------------------------------------------------
+    // UPDATE WET / DRY MIX
+    // --------------------------------------------------
+
+    function updateMix() {
+
+        const mix = Number(mixControl.value) / 100;
+
+        mixValue.textContent =
+            Math.round(mix * 100) + "%";
+
+        if (!dryGain || !wetGain) {
+            return;
+        }
+
+        const bypassed =
+            bypassControl.checked ||
+            distortionType.value === "none";
+
+        const wet = bypassed ? 0 : mix;
+
+        const dry = 1 - wet;
+
+        dryGain.gain.setTargetAtTime(
+            dry,
+            audioContext.currentTime,
+            0.01
+        );
+
+        wetGain.gain.setTargetAtTime(
+            wet,
+            audioContext.currentTime,
+            0.01
         );
 
     }
 
 
     // --------------------------------------------------
-    // AUDIO CONTEXT INITIALIZATION
+    // AUDIO GRAPH INITIALIZATION
     // --------------------------------------------------
 
     function initializeAudioContext() {
@@ -96,7 +366,26 @@ async function init() {
 
         audioContext = new AudioContext();
 
+        // Create nodes
+
+        source = audioContext.createMediaElementSource(
+            audioPlayer
+        );
+
+        inputGain = audioContext.createGain();
+
+        waveshaper = audioContext.createWaveShaper();
+
+        dryGain = audioContext.createGain();
+
+        wetGain = audioContext.createGain();
+
+        masterGain = audioContext.createGain();
+
         analyser = audioContext.createAnalyser();
+
+
+        // Configure analyser
 
         analyser.fftSize = FFT_SIZE;
 
@@ -106,30 +395,67 @@ async function init() {
 
         analyser.maxDecibels = MAX_DB;
 
-        frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        frequencyData = new Uint8Array(
+            analyser.frequencyBinCount
+        );
 
-        // Connect audio element to Web Audio API
 
-        source = audioContext.createMediaElementSource(audioPlayer);
+        // Configure master output
 
-        source.connect(analyser);
+        masterGain.gain.value = 0.8;
 
-        // Connect analyser to speakers
+
+        // ----------------------------------------------
+        // AUDIO ROUTING
+        // ----------------------------------------------
+
+        // Source -> Input Gain
+
+        source.connect(inputGain);
+
+
+        // Dry signal
+
+        inputGain.connect(dryGain);
+
+
+        // Wet signal
+
+        inputGain.connect(waveshaper);
+
+        waveshaper.connect(wetGain);
+
+
+        // Combine dry and wet signals
+
+        dryGain.connect(masterGain);
+
+        wetGain.connect(masterGain);
+
+
+        // Master -> Analyser -> Speakers
+
+        masterGain.connect(analyser);
 
         analyser.connect(audioContext.destination);
+
+
+        // Initialize controls
+
+        updateGain();
+
+        updateDistortion();
 
     }
 
 
     // --------------------------------------------------
-    // FREQUENCY TO CANVAS POSITION
+    // SPECTROGRAM FREQUENCY MAPPING
     // --------------------------------------------------
 
     function getFrequencyBin(y) {
 
         const normalizedY = y / canvas.height;
-
-        // Logarithmic frequency scale
 
         const frequency = MAX_FREQUENCY *
             Math.pow(
@@ -152,12 +478,10 @@ async function init() {
 
 
     // --------------------------------------------------
-    // FREQUENCY INTENSITY TO COLOR
+    // SPECTROGRAM COLOR
     // --------------------------------------------------
 
     function getColor(intensity) {
-
-        // intensity ranges from 0 to 1
 
         const hue = 270 - intensity * 270;
 
@@ -184,18 +508,16 @@ async function init() {
 
         const height = canvas.height;
 
-        // Obtain frequency-domain data
-
         analyser.getByteFrequencyData(frequencyData);
 
-        // Shift existing spectrogram one pixel left
+        // Shift spectrogram left
 
         ctx.drawImage(
             canvas, -1,
             0
         );
 
-        // Draw the newest frequency column
+        // Draw newest frequency column
 
         const x = width - 1;
 
@@ -205,11 +527,7 @@ async function init() {
 
             const magnitude = frequencyData[bin];
 
-            // Normalize intensity
-
             const intensity = magnitude / 255;
-
-            // Apply color gradient
 
             ctx.fillStyle = getColor(intensity);
 
@@ -221,8 +539,6 @@ async function init() {
             );
 
         }
-
-        // Continue animation
 
         animationFrame = requestAnimationFrame(
             drawSpectrogram
@@ -240,7 +556,9 @@ async function init() {
         initializeAudioContext();
 
         if (audioContext.state === "suspended") {
+
             await audioContext.resume();
+
         }
 
         cancelAnimationFrame(animationFrame);
@@ -277,7 +595,8 @@ async function init() {
 
         } catch (error) {
 
-            appStatus.textContent = "Unable to initialize audio analysis.";
+            appStatus.textContent =
+                "Unable to initialize audio analysis.";
 
             console.error(error);
 
@@ -301,6 +620,36 @@ async function init() {
 
 
     // --------------------------------------------------
+    // EFFECT CONTROL EVENTS
+    // --------------------------------------------------
+
+    gainControl.addEventListener("input", updateGain);
+
+
+    driveControl.addEventListener("input", () => {
+
+        driveValue.textContent =
+            Number(driveControl.value).toFixed(1) + "x";
+
+        updateDistortion();
+
+    });
+
+
+    distortionType.addEventListener("change", () => {
+
+        updateDistortion();
+
+    });
+
+
+    mixControl.addEventListener("input", updateMix);
+
+
+    bypassControl.addEventListener("change", updateMix);
+
+
+    // --------------------------------------------------
     // AUDIO FILE UPLOAD
     // --------------------------------------------------
 
@@ -312,8 +661,6 @@ async function init() {
             return;
         }
 
-        // Validate extension
-
         const extension = file.name
             .split(".")
             .pop()
@@ -322,14 +669,12 @@ async function init() {
         if (extension !== "mp3" && extension !== "wav") {
 
             appStatus.textContent =
-                "Invalid file format. Please upload an MP3 or WAV file.";
+                "Invalid file format. Please upload MP3 or WAV.";
 
             audioUpload.value = "";
 
             return;
         }
-
-        // Validate MIME type when provided
 
         const validTypes = [
             "audio/mpeg",
@@ -344,40 +689,37 @@ async function init() {
 
         if (!validTypes.includes(file.type)) {
 
-            appStatus.textContent = "Invalid audio MIME type.";
+            appStatus.textContent =
+                "Invalid audio MIME type.";
 
             audioUpload.value = "";
 
             return;
         }
 
-        // Stop previous playback and animation
+        // Stop existing playback
 
         audioPlayer.pause();
 
         stopSpectrogram();
 
-        // Release previous object URL
+        // Release old object URL
 
-        if (audioPlayer.dataset.objectUrl) {
+        if (currentObjectURL) {
 
-            URL.revokeObjectURL(
-                audioPlayer.dataset.objectUrl
-            );
+            URL.revokeObjectURL(currentObjectURL);
 
         }
 
-        // Clear previous spectrogram
+        // Clear visualization
 
         clearSpectrogram();
 
-        // Create new audio URL
+        // Load new file
 
-        const audioURL = URL.createObjectURL(file);
+        currentObjectURL = URL.createObjectURL(file);
 
-        audioPlayer.dataset.objectUrl = audioURL;
-
-        audioPlayer.src = audioURL;
+        audioPlayer.src = currentObjectURL;
 
         audioPlayer.load();
 
@@ -398,11 +740,7 @@ async function init() {
     // WINDOW EVENTS
     // --------------------------------------------------
 
-    window.addEventListener("resize", () => {
-
-        resizeCanvas();
-
-    });
+    window.addEventListener("resize", resizeCanvas);
 
 
     // --------------------------------------------------
