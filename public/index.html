@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Audio Upload</title>
+    <title>Audio Spectrogram</title>
 
     <link rel="stylesheet" href="./index.css">
     <script src="./app.js" defer></script>
@@ -15,7 +15,9 @@
 
     <main class="container">
 
-        <h1>Audio Upload</h1>
+        <h1>Audio Spectrogram</h1>
+
+        <!-- AUDIO UPLOAD -->
 
         <div class="upload-container">
 
@@ -31,6 +33,8 @@
 
         </div>
 
+        <!-- AUDIO PLAYER -->
+
         <div class="audio-container" id="audio-container" hidden>
 
             <h2 id="audio-filename"></h2>
@@ -38,6 +42,35 @@
             <audio id="audio-player" controls></audio>
 
         </div>
+
+        <!-- SPECTROGRAM -->
+
+        <section class="spectrogram-container">
+
+            <h2>Spectrogram</h2>
+
+            <div class="spectrogram-wrapper">
+
+                <div class="frequency-labels">
+                    <span>20 kHz</span>
+                    <span>10 kHz</span>
+                    <span>5 kHz</span>
+                    <span>1 kHz</span>
+                    <span>100 Hz</span>
+                </div>
+
+                <canvas id="spectrogram" width="1000" height="400"></canvas>
+
+            </div>
+
+            <div class="spectrogram-footer">
+                <span>Frequency (Hz)</span>
+                <span>Time →</span>
+            </div>
+
+        </section>
+
+        <!-- STATUS -->
 
         <p id="app-status"></p>
 

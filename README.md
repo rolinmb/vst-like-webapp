@@ -1,0 +1,1 @@
+Creating a multi-effect vst-like web application via the WebAudio API. Made with the help of ChatGPT (free version too).
