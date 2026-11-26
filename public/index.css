@@ -1,0 +1,77 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #171717;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    padding: 30px;
+    background: #242424;
+    border-radius: 12px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 30px;
+}
+
+.upload-container {
+    padding: 30px;
+    border: 2px dashed #666666;
+    border-radius: 8px;
+}
+
+.upload-label {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #3478f6;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.upload-label:hover {
+    background: #2563d9;
+}
+
+#audio-upload {
+    display: none;
+}
+
+.file-info {
+    margin-top: 20px;
+    color: #aaaaaa;
+    font-size: 14px;
+}
+
+.audio-container {
+    margin-top: 30px;
+}
+
+.audio-container h2 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+audio {
+    width: 100%;
+}
+
+#app-status {
+    margin-top: 20px;
+    color: #ff7777;
+    font-size: 14px;
+}
